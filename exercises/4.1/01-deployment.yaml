@@ -1,0 +1,60 @@
+# Quantas revisoes o rollout history mostra depois de 4 aplicacoes?
+# Cada mudanca no template do Pod (imagem, env, limits) cria uma ReplicaSet
+# nova e a anterior fica com 0 replicas para permitir rollback. O historico
+# e a lista dessas ReplicaSets.
+# revisionHistoryLimit conta so as ReplicaSets ANTIGAS (doc oficial:
+# "the number of old ReplicaSets to retain"). Com 3, ficam 3 antigas + a
+# atual = 4 revisoes visiveis, e nao 3 como o enunciado sugere.
+# Para ver exatamente 3 revisoes, o limite tem que ser 2: ai a ReplicaSet
+# da revisao 1 e coletada pelo garbage collector e some do historico.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: store-dev
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store-api
+  namespace: store-dev
+  labels:
+    app: store-api
+spec:
+  replicas: 4
+  revisionHistoryLimit: 3
+  progressDeadlineSeconds: 120
+  minReadySeconds: 15
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: store-api
+  template:
+    metadata:
+      labels:
+        app: store-api
+    spec:
+      containers:
+        - name: store-api
+          image: store-api:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: APP_ENV
+              value: dev
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 256Mi

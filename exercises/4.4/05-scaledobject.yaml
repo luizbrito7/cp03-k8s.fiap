@@ -1,0 +1,20 @@
+# Janela curta para a demonstracao: ativo do minuto 0 ao 5 de cada dezena
+# (x0 a x5). Fora dela o store-worker vai a 0 apos o cooldownPeriod.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: store-worker
+  namespace: store-dev
+spec:
+  scaleTargetRef:
+    name: store-worker
+  minReplicaCount: 0
+  maxReplicaCount: 10
+  cooldownPeriod: 30
+  triggers:
+    - type: cron
+      metadata:
+        timezone: America/Sao_Paulo
+        start: "*/10 * * * *"
+        end: "5-59/10 * * * *"
+        desiredReplicas: "2"

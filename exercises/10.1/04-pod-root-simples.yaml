@@ -1,0 +1,10 @@
+# root comum, sem privileged/host*: mostra onde baseline e restricted divergem
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-root-simples
+spec:
+  containers:
+    - name: root
+      image: busybox:1.37
+      command: ["sleep", "3600"]

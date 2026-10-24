@@ -1,0 +1,38 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledJob
+metadata:
+  name: store-worker-fila
+  namespace: store-dev
+spec:
+  pollingInterval: 10
+  minReplicaCount: 0
+  maxReplicaCount: 10
+  successfulJobsHistoryLimit: 0
+  failedJobsHistoryLimit: 2
+  jobTargetRef:
+    backoffLimit: 2
+    template:
+      metadata:
+        labels:
+          app: store-worker
+      spec:
+        restartPolicy: Never
+        containers:
+          - name: worker
+            image: redis:7-alpine
+            # cada Job consome ate 5 pedidos (= listLength) e termina
+            command: ["sh", "-c"]
+            args:
+              - |
+                for i in 1 2 3 4 5; do
+                  p=$(redis-cli -h redis LPOP pedidos)
+                  [ -z "$p" ] && break
+                  echo "$(hostname) processou $p"
+                  sleep 6
+                done
+  triggers:
+    - type: redis
+      metadata:
+        address: redis.store-dev.svc.cluster.local:6379
+        listName: pedidos
+        listLength: "5"

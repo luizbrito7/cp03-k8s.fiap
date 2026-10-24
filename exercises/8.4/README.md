@@ -1,0 +1,16 @@
+#### Exercício 8.4 — Desafio: processamento de fila com escala a zero (KEDA)
+*Tempo estimado: 60 min · Nível: desafio integrador*
+
+- **Objetivo:** construir um pipeline event-driven com escala a zero e compará-lo com a alternativa serverless gerenciada.
+- **Enunciado:** implemente o processamento da fila de pedidos da FIAP Store com escala a zero comprovada. Escolha **uma** das trilhas:
+  - **Trilha A (KEDA):** instale o KEDA (`helm repo add kedacore https://kedacore.github.io/charts && helm install keda kedacore/keda -n keda --create-namespace`). Suba um Redis no cluster (`redis:7-alpine`) como fila e crie um `ScaledJob` (ou `ScaledObject` sobre um Deployment `store-worker`) com trigger `redis` (`listName: pedidos`, `listLength: "5"`), `minReplicaCount: 0` e `maxReplicaCount: 10`. Comprove: (a) com a fila vazia, `kubectl get pods -l app=store-worker` retorna vazio; (b) após inserir 50 itens com `redis-cli RPUSH`, o KEDA cria múltiplos Jobs/Pods; (c) esvaziada a fila, o cluster volta a zero Pods.
+  - **Trilha B (simulação com HPA):** se não puder instalar o KEDA, use um HPA sobre métrica customizada (ou, na falta do metrics adapter, um HPA de CPU sobre um worker que consuma CPU proporcionalmente ao tamanho da fila) e documente explicitamente **por que o HPA nativo não consegue escalar a zero** (`minReplicas` mínimo é 1) e o que o KEDA faz de diferente.
+  Em ambas as trilhas, produza `COMPARACAO.md` (mínimo 500 palavras) contrastando três arquiteturas para o mesmo problema: (1) Job com `parallelism` fixo, (2) KEDA ScaledJob, (3) SQS + Lambda com event source mapping. Cubra obrigatoriamente: comportamento sob pico de 10.000 mensagens; latência de cold start em cada uma; limite de tempo de execução por item (15 min no Lambda x ilimitado no Job); modelo de custo com números (custo/hora de um node group `t3.medium` x preço por invocação e GB-segundo do Lambda x US$ 0,10/hora do control plane do EKS); e tratamento de falhas (backoffLimit x DLQ do SQS x `podFailurePolicy`). Encerre com uma recomendação justificada para a FIAP Store, considerando que o pico de pedidos ocorre na Black Friday e o volume no restante do ano é baixo.
+- **Entregável:** `keda-scaledjob.yaml` (ou `hpa-simulacao.yaml` + justificativa), `COMPARACAO.md`, e evidências em sequência temporal: `kubectl get pods -n store-dev` com zero Pods, durante o pico e após o esvaziamento, mais `kubectl describe scaledjob store-worker-fila -n store-dev` (ou `describe hpa`).
+- **Critério de aceite:** existem três capturas distintas de `kubectl get pods` provando o ciclo zero → N → zero (na Trilha B, a documentação explica corretamente a limitação de `minReplicas: 1`); o `COMPARACAO.md` cobre os cinco eixos exigidos com números concretos e apresenta recomendação justificada.
+- **Dica:**
+  <details><summary>Dica</summary>
+  Para popular a fila: <code>kubectl exec -it deploy/redis -- sh -c 'for i in $(seq 1 50); do redis-cli RPUSH pedidos "pedido-$i"; done'</code>. Monitore com <code>watch -n2 'kubectl get pods -n store-dev; kubectl exec deploy/redis -- redis-cli LLEN pedidos'</code>. O KEDA leva até <code>pollingInterval</code> segundos para reagir — seja paciente antes de declarar que não funcionou.
+  </details>
+
+---

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store-api
+  namespace: store-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: store-api
+  template:
+    metadata:
+      labels:
+        app: store-api
+    spec:
+      containers:
+        - name: store-api
+          image: store-api:1.0
+          imagePullPolicy: IfNotPresent

@@ -1,0 +1,14 @@
+# segundo RoleBinding, agora em store-prod, reaproveitando a mesma ClusterRole edit
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cenario-d-edit
+  namespace: store-prod
+subjects:
+  - kind: User
+    name: user.d
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: edit

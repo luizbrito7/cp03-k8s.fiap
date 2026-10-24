@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: relatorio-quebrado
+  namespace: store-debug
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: relatorio
+          image: busybox:1.37
+          command: ["cat", "/dados/relatorio.csv"]

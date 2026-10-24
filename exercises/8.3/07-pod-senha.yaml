@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: le-senha
+  namespace: store-debug
+spec:
+  restartPolicy: Never
+  containers:
+    - name: le-senha
+      image: busybox:1.37
+      command: ["sh", "-c", "echo tamanho=${#SENHA}; printf %s \"$SENHA\" | od -c"]
+      env:
+        - name: SENHA
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: SENHA

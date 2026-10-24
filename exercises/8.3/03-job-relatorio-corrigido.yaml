@@ -1,0 +1,32 @@
+# correcao: o arquivo passa a existir (ConfigMap montado em /dados)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: relatorio
+  namespace: store-debug
+data:
+  relatorio.csv: |
+    pedido,valor
+    1,99.90
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: relatorio-corrigido
+  namespace: store-debug
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: relatorio
+          image: busybox:1.37
+          command: ["cat", "/dados/relatorio.csv"]
+          volumeMounts:
+            - name: dados
+              mountPath: /dados
+      volumes:
+        - name: dados
+          configMap:
+            name: relatorio

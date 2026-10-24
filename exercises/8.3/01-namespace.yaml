@@ -1,0 +1,5 @@
+# namespace separado para nao misturar com o CronJob do 8.2 em store-dev
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: store-debug

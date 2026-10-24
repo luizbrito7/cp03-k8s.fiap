@@ -1,0 +1,26 @@
+| verbo recurso | dev<br>dev | dev<br>prod | qa<br>dev | qa<br>prod | sre<br>dev | sre<br>prod | auditor<br>dev | auditor<br>prod |
+|---|---|---|---|---|---|---|---|---|
+| `get pods` | yes | yes | yes | yes | yes | yes | yes | yes |
+| `create pods` | yes | no | no | no | yes | yes | no | no |
+| `get pods/log` | yes | yes | yes | yes | yes | yes | yes | yes |
+| `create pods/exec` | yes | no | yes | no | yes | yes | no | no |
+| `patch services` | yes | no | no | no | yes | yes | no | no |
+| `get configmaps` | yes | yes | yes | yes | yes | yes | yes | yes |
+| `create deployments.apps` | yes | no | no | no | yes | yes | no | no |
+| `delete deployments.apps` | yes | no | no | no | yes | yes | no | no |
+| `create jobs.batch` | yes | no | yes | no | yes | yes | no | no |
+| `delete jobs.batch` | yes | no | yes | no | yes | yes | no | no |
+| `create horizontalpodautoscalers.autoscaling` | yes | no | no | no | yes | yes | no | no |
+| `get secrets` | no | no | no | no | yes | yes | no | no |
+| `list secrets` | no | no | no | no | yes | yes | no | no |
+| `create secrets` | no | no | no | no | yes | yes | no | no |
+| `create persistentvolumeclaims` | no | no | no | no | yes | yes | no | no |
+| `create statefulsets.apps` | no | no | no | no | yes | yes | no | no |
+| `create daemonsets.apps` | no | no | no | no | yes | yes | no | no |
+| `list roles.rbac.authorization.k8s.io` | no | no | no | no | yes | yes | yes | yes |
+| `list rolebindings.rbac.authorization.k8s.io` | no | no | no | no | yes | yes | yes | yes |
+| `create rolebindings.rbac.authorization.k8s.io` | no | no | no | no | yes | yes | no | no |
+| `get nodes` | no | no | no | no | yes | yes | no | no |
+| `list namespaces` | no | no | no | no | yes | yes | no | no |
+| `list storageclasses.storage.k8s.io` | no | no | no | no | yes | yes | no | no |
+| `create clusterrolebindings.rbac.authorization.k8s.io` | no | no | no | no | no | no | no | no |

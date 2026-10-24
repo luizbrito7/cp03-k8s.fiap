@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: carga
+  namespace: store-dev
+spec:
+  containers:
+    - name: carga
+      image: busybox:1.37
+      command: ["sleep", "infinity"]

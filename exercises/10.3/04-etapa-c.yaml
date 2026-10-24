@@ -1,0 +1,56 @@
+# (c) + ENTRYPOINT exec form
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store-api
+  namespace: store-dev
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: store-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: store-api
+    spec:
+      terminationGracePeriodSeconds: 45
+      containers:
+        - name: store-api
+          image: store-api:exec-a
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            periodSeconds: 2
+            failureThreshold: 1
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "10"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: store-api
+  namespace: store-dev
+spec:
+  selector:
+    app: store-api
+  ports:
+    - port: 80
+      targetPort: http

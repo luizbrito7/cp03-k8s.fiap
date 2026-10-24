@@ -1,0 +1,11 @@
+#### Exercício 8.2 — CronJob com concorrência controlada e Secret de duas formas
+*Tempo estimado: 40 min · Nível: aplicação*
+
+- **Objetivo:** operar um CronJob real e comprovar experimentalmente a diferença entre consumir Secret por env e por volume.
+- **Enunciado:** crie um CronJob `sincroniza-catalogo` com `schedule: "*/5 * * * *"`, `timeZone: "America/Sao_Paulo"`, `startingDeadlineSeconds: 120`, `successfulJobsHistoryLimit: 2` e `failedJobsHistoryLimit: 1`. O container deve durar deliberadamente **6 minutos** (`sleep 360`), de modo que a execução seguinte encontre a anterior ainda ativa. Rode primeiro com `concurrencyPolicy: Allow` por 12 minutos, registrando quantos Jobs ficaram ativos ao mesmo tempo; depois altere para `Forbid`, rode outros 12 minutos e registre a diferença, capturando o evento do CronJob que indica a execução pulada. Paralelamente, crie um Secret `catalogo-secret` com a chave `API_TOKEN` e faça o Pod consumi-lo **simultaneamente** como variável de ambiente `API_TOKEN` e como arquivo em `/etc/catalogo/token` (com `defaultMode: 0400`). Durante uma execução ativa, altere o valor do Secret com `kubectl patch` e comprove, dentro do mesmo Pod, que o arquivo mudou e a variável de ambiente não. Documente tudo em `ANALISE.md`.
+- **Entregável:** `sincroniza-cronjob.yaml` (as duas versões), `catalogo-secret.yaml`, `ANALISE.md`, saídas de `kubectl get cronjob,jobs,pods -n store-dev` nos dois cenários, o evento do `kubectl describe cronjob` referente à execução pulada, e as saídas de `printenv API_TOKEN` e `cat /etc/catalogo/token` antes e depois do patch.
+- **Critério de aceite:** com `Allow` existem ≥2 Jobs simultaneamente ativos; com `Forbid` existe no máximo 1 e o `describe` mostra o evento `JobAlreadyActive` / "Job already active, skipping"; o histórico nunca ultrapassa 2 Jobs concluídos; e a evidência mostra o arquivo atualizado com a variável de ambiente desatualizada no mesmo Pod.
+- **Dica:**
+  <details><summary>Dica</summary>
+  <code>kubectl get cronjob sincroniza-catalogo -o jsonpath='{.status.active}'</code> lista os Jobs ativos. A atualização do arquivo montado leva até ~60-70 segundos (período de sincronização do kubelet) — não conclua cedo demais.
+  </details>

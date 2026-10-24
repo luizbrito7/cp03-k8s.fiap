@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sincroniza-catalogo
+  namespace: store-dev
+spec:
+  schedule: "*/5 * * * *"
+  timeZone: "America/Sao_Paulo"
+  startingDeadlineSeconds: 120
+  concurrencyPolicy: Allow
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: sincroniza
+              image: busybox:1.37
+              command: ["sh", "-c", "echo sincronizando catalogo; sleep 360; echo fim"]
+              env:
+                - name: API_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: catalogo-secret
+                      key: API_TOKEN
+              volumeMounts:
+                - name: token
+                  mountPath: /etc/catalogo
+                  readOnly: true
+          volumes:
+            - name: token
+              secret:
+                secretName: catalogo-secret
+                defaultMode: 0400
+                items:
+                  - key: API_TOKEN
+                    path: token

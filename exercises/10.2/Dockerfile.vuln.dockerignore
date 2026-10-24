@@ -1,0 +1,2 @@
+# vazio de proposito: o Dockerfile.vuln simula "sem .dockerignore"
+# (BuildKit usa <Dockerfile>.dockerignore no lugar do .dockerignore da pasta)

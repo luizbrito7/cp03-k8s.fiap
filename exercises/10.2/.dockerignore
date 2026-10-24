@@ -1,0 +1,11 @@
+.git
+.env
+*.pem
+*.key
+tests/
+__pycache__/
+Dockerfile*
+relatorio-*.txt
+*.json
+*.log
+*.md

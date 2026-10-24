@@ -2,3 +2,6 @@
 assets/kubeconfig
 material/01-handbook.md
 delivery/
+# chave privada do joao.qa (9.2): repo publico, fica so local
+exercises/9.2/joao-qa.key
+exercises/9.2/kubeconfig-joao.yaml

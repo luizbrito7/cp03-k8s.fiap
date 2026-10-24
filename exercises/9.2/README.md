@@ -1,0 +1,11 @@
+#### Exercício 9.2 — Usuário por certificado com kubeconfig funcional
+*Tempo estimado: 45 min · Nível: aplicação*
+
+- **Objetivo:** executar o fluxo completo de emissão de identidade humana e entregar um kubeconfig autocontido e testado.
+- **Enunciado:** crie o usuário `joao.qa`, pertencente ao grupo `fiap:qa`, seguindo todo o fluxo: chave privada com `openssl genrsa`, CSR com `-subj "/CN=joao.qa/O=fiap:qa"`, objeto `CertificateSigningRequest` com `signerName: kubernetes.io/kube-apiserver-client` e `expirationSeconds: 604800` (7 dias), aprovação, extração do certificado e montagem do `kubeconfig-joao.yaml` com `--embed-certs=true` (o arquivo deve funcionar sozinho, sem depender de nenhum outro arquivo no disco). Depois: (a) prove que **antes** de qualquer binding o acesso retorna `403` e não `401`, e explique por escrito a diferença; (b) crie um RoleBinding no namespace `store-dev` associando o **grupo** `fiap:qa` (não o usuário) ao ClusterRole `view`, e comprove que o João passa a listar Pods — demonstrando que a permissão veio do `O=` do certificado; (c) conceda adicionalmente, via Role própria, permissão de `create` sobre `pods/exec` **apenas** no namespace `store-dev`, e comprove que `kubectl exec` funciona em `store-dev` e falha em `store-prod`; (d) revogue todo o acesso e comprove que o certificado continua autenticando (403, não 401). Registre tudo em `RELATORIO.md`.
+- **Entregável:** `joao-qa.key`, `joao-qa.csr`, `joao-qa.crt`, `csr-joao.yaml`, `kubeconfig-joao.yaml`, `rbac-qa.yaml`, `RELATORIO.md` com as saídas de cada etapa e a saída de `openssl x509 -in joao-qa.crt -noout -subject -dates`.
+- **Critério de aceite:** o `kubeconfig-joao.yaml`, copiado para um diretório vazio, executa `kubectl get pods -n store-dev` com sucesso; o subject do certificado é `CN = joao.qa, O = fiap:qa`; o `exec` funciona em `store-dev` e retorna `Forbidden` em `store-prod`; e após a revogação o erro é `Forbidden` (403), não `Unauthorized` (401).
+- **Dica:**
+  <details><summary>Dica</summary>
+  Se o cluster for EKS, este exercício não funciona (o EKS não assina CSRs de cliente) — use minikube ou kind. Para testar o kubeconfig isolado: <code>mkdir /tmp/teste && cp kubeconfig-joao.yaml /tmp/teste/ && cd /tmp/teste && KUBECONFIG=./kubeconfig-joao.yaml kubectl get pods -n store-dev</code>.
+  </details>

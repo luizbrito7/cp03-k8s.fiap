@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store-front
+spec:
+  template:
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: store-front
+          # medido: 6-11Mi; CPU irrelevante servindo estatico (1m em repouso)
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              memory: 32Mi
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 10

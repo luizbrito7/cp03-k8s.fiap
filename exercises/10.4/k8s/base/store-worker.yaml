@@ -1,0 +1,40 @@
+# consome a fila "pedidos" do redis (mesmo papel do worker do 8.4, agora continuo)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: store-worker
+  template:
+    metadata:
+      labels:
+        app: store-worker
+    spec:
+      serviceAccountName: store-worker
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: store-worker
+          image: redis:7-alpine
+          command: ["sh", "-c"]
+          args:
+            - while true; do redis-cli -h redis BLPOP pedidos 0; done
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]

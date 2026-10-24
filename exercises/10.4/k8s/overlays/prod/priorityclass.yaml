@@ -1,0 +1,7 @@
+# a api e a carga critica: sob pressao de recursos, preempta Pods de prioridade padrao (0)
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: store-critica
+value: 100000
+description: store-api em producao

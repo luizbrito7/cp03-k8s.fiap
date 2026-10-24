@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: store-api
+spec:
+  selector:
+    matchLabels:
+      app: store-api
+  endpoints:
+    - port: http
+      path: /metrics/ # o mount do prometheus_client responde em /metrics/ (sem a barra: 307)
+      interval: 30s

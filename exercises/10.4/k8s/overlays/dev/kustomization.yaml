@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: store-dev
+resources:
+  - ../../base
+  - namespace.yaml
+images:
+  - name: store-api
+    newTag: "1.0"
+# base ja e 1 replica, APP_ENV=dev e recursos pequenos: dev nao precisa de patch

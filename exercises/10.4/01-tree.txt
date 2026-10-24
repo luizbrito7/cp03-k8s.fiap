@@ -1,0 +1,32 @@
+.
+├── app
+│   ├── Dockerfile
+│   ├── main.py
+│   └── requirements.txt
+├── k8s
+│   ├── base
+│   │   ├── kustomization.yaml
+│   │   ├── redis.yaml
+│   │   ├── serviceaccounts.yaml
+│   │   ├── store-api.yaml
+│   │   ├── store-front.yaml
+│   │   └── store-worker.yaml
+│   └── overlays
+│       ├── dev
+│       │   ├── kustomization.yaml
+│       │   └── namespace.yaml
+│       └── prod
+│           ├── hpa.yaml
+│           ├── kustomization.yaml
+│           ├── limitrange.yaml
+│           ├── namespace.yaml
+│           ├── networkpolicy.yaml
+│           ├── patch-store-api.yaml
+│           ├── patch-store-front.yaml
+│           ├── pdb.yaml
+│           ├── priorityclass.yaml
+│           ├── prometheusrule.yaml
+│           ├── resourcequota.yaml
+│           └── servicemonitor.yaml
+├── Makefile
+└── README.md

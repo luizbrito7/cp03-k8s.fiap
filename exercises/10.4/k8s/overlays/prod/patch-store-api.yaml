@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store-api
+spec:
+  template:
+    spec:
+      priorityClassName: store-critica
+      terminationGracePeriodSeconds: 45
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: store-api
+      containers:
+        - name: store-api
+          env:
+            - name: APP_ENV
+              value: prod
+          # medido sob carga (16 mil req em 75 s): 65-123m de CPU e 38Mi por Pod
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              memory: 64Mi
+          lifecycle:
+            preStop:
+              sleep: # acao nativa: o distroless nao tem /bin/sleep
+                seconds: 10

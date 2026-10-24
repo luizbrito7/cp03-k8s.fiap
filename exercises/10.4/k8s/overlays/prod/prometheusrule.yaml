@@ -1,0 +1,20 @@
+# SLO: 99,5% das requisicoes da store-api respondidas por pelo menos 2 replicas saudaveis.
+# Alerta acionavel: menos de 2 alvos "up" por 5 min = o PDB ja nao protege a disponibilidade.
+# Runbook: CHECKLIST.md, secao "Runbook: StoreApiPoucasReplicas".
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: store-api
+  labels:
+    release: monitoring # o Prometheus do chart so carrega regras com este label (ruleSelector)
+spec:
+  groups:
+    - name: store-api
+      rules:
+        - alert: StoreApiPoucasReplicas
+          expr: sum(up{namespace="store-prod", job="store-api"}) < 2
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: store-api com menos de 2 replicas respondendo em store-prod

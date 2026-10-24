@@ -1,0 +1,568 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.36
+    pod-security.kubernetes.io/warn: restricted
+  name: store-prod
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: store-prod
+  namespace: store-prod
+spec:
+  hard:
+    limits.memory: 4Gi
+    pods: "30"
+    requests.cpu: "3"
+    requests.memory: 3Gi
+---
+apiVersion: v1
+automountServiceAccountToken: false
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/part-of: fiap-store
+  name: redis
+  namespace: store-prod
+---
+apiVersion: v1
+automountServiceAccountToken: false
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/part-of: fiap-store
+  name: store-api
+  namespace: store-prod
+---
+apiVersion: v1
+automountServiceAccountToken: false
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/part-of: fiap-store
+  name: store-front
+  namespace: store-prod
+---
+apiVersion: v1
+automountServiceAccountToken: false
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/part-of: fiap-store
+  name: store-worker
+  namespace: store-prod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis
+    app.kubernetes.io/part-of: fiap-store
+  name: redis
+  namespace: store-prod
+spec:
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: redis
+  selector:
+    app: redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: store-api
+    app.kubernetes.io/part-of: fiap-store
+  name: store-api
+  namespace: store-prod
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app: store-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: store-front
+    app.kubernetes.io/part-of: fiap-store
+  name: store-front
+  namespace: store-prod
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app: store-front
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: padrao
+  namespace: store-prod
+spec:
+  limits:
+  - default:
+      memory: 128Mi
+    defaultRequest:
+      cpu: 50m
+      memory: 64Mi
+    max:
+      memory: 512Mi
+    type: Container
+---
+apiVersion: scheduling.k8s.io/v1
+description: store-api em producao
+kind: PriorityClass
+metadata:
+  name: store-critica
+value: 100000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/part-of: fiap-store
+  name: redis
+  namespace: store-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - --save
+        - ""
+        - --appendonly
+        - "no"
+        image: redis@sha256:57e4255cc971b1c8d6f8a6ca283ac01bc3ecdd914273ef6bfaede87aaecd6541
+        name: redis
+        ports:
+        - containerPort: 6379
+          name: redis
+        readinessProbe:
+          tcpSocket:
+            port: redis
+        resources:
+          limits:
+            memory: 64Mi
+          requests:
+            cpu: 20m
+            memory: 32Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /data
+          name: data
+      securityContext:
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 999
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: redis
+      volumes:
+      - emptyDir: {}
+        name: data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/part-of: fiap-store
+  name: store-api
+  namespace: store-prod
+spec:
+  selector:
+    matchLabels:
+      app: store-api
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: store-api
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - env:
+        - name: APP_ENV
+          value: prod
+        image: store-api:1.3
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          preStop:
+            sleep:
+              seconds: 10
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: http
+          periodSeconds: 10
+        name: store-api
+        ports:
+        - containerPort: 8000
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          periodSeconds: 5
+        resources:
+          limits:
+            memory: 64Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp
+      priorityClassName: store-critica
+      securityContext:
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: store-api
+      terminationGracePeriodSeconds: 45
+      topologySpreadConstraints:
+      - labelSelector:
+          matchLabels:
+            app: store-api
+        maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+      volumes:
+      - emptyDir: {}
+        name: tmp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/part-of: fiap-store
+  name: store-front
+  namespace: store-prod
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: store-front
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: store-front
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - image: nginxinc/nginx-unprivileged@sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03
+        lifecycle:
+          preStop:
+            sleep:
+              seconds: 10
+        name: store-front
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+        resources:
+          limits:
+            memory: 32Mi
+          requests:
+            cpu: 20m
+            memory: 32Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp
+      securityContext:
+        runAsGroup: 101
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: store-front
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: tmp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/part-of: fiap-store
+  name: store-worker
+  namespace: store-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: store-worker
+  template:
+    metadata:
+      labels:
+        app: store-worker
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - while true; do redis-cli -h redis BLPOP pedidos 0; done
+        command:
+        - sh
+        - -c
+        image: redis@sha256:57e4255cc971b1c8d6f8a6ca283ac01bc3ecdd914273ef6bfaede87aaecd6541
+        name: store-worker
+        resources:
+          limits:
+            memory: 32Mi
+          requests:
+            cpu: 10m
+            memory: 16Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+      securityContext:
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 999
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: store-worker
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: store-api
+  namespace: store-prod
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: store-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: store-front
+  namespace: store-prod
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: store-front
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: store-api
+  namespace: store-prod
+spec:
+  maxReplicas: 10
+  metrics:
+  - resource:
+      name: cpu
+      target:
+        averageUtilization: 70
+        type: Utilization
+    type: Resource
+  minReplicas: 3
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: store-api
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    release: monitoring
+  name: store-api
+  namespace: store-prod
+spec:
+  groups:
+  - name: store-api
+    rules:
+    - alert: StoreApiPoucasReplicas
+      annotations:
+        summary: store-api com menos de 2 replicas respondendo em store-prod
+      expr: sum(up{namespace="store-prod", job="store-api"}) < 2
+      for: 5m
+      labels:
+        severity: critical
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: store-api
+  namespace: store-prod
+spec:
+  endpoints:
+  - interval: 30s
+    path: /metrics/
+    port: http
+  selector:
+    matchLabels:
+      app: store-api
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: store-prod
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: permite-dns
+  namespace: store-prod
+spec:
+  egress:
+  - ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+    to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+  podSelector: {}
+  policyTypes:
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis
+  namespace: store-prod
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: store-worker
+    ports:
+    - port: 6379
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: store-api
+  namespace: store-prod
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: store-front
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: monitoring
+    ports:
+    - port: 8000
+  podSelector:
+    matchLabels:
+      app: store-api
+  policyTypes:
+  - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: store-front
+  namespace: store-prod
+spec:
+  egress:
+  - ports:
+    - port: 8000
+    to:
+    - podSelector:
+        matchLabels:
+          app: store-api
+  ingress:
+  - ports:
+    - port: 8080
+  podSelector:
+    matchLabels:
+      app: store-front
+  policyTypes:
+  - Ingress
+  - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: store-worker
+  namespace: store-prod
+spec:
+  egress:
+  - ports:
+    - port: 6379
+    to:
+    - podSelector:
+        matchLabels:
+          app: redis
+  podSelector:
+    matchLabels:
+      app: store-worker
+  policyTypes:
+  - Egress

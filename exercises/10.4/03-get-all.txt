@@ -1,0 +1,65 @@
+$ kubectl get all,pdb,hpa,netpol,quota -n store-prod
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/redis-85d7b8d48b-mzbwt          1/1     Running   0          7m25s
+pod/store-api-54868cdcc9-7bv9r      1/1     Running   0          2m48s
+pod/store-api-54868cdcc9-97qgm      1/1     Running   0          2m48s
+pod/store-api-54868cdcc9-bc287      1/1     Running   0          3m3s
+pod/store-api-54868cdcc9-dt8fk      1/1     Running   0          4m56s
+pod/store-api-54868cdcc9-hvnt5      1/1     Running   0          3m3s
+pod/store-front-79cf9c7cb6-4wlnk    1/1     Running   0          3m42s
+pod/store-front-79cf9c7cb6-sjmhk    1/1     Running   0          3m51s
+pod/store-front-79cf9c7cb6-vc28k    1/1     Running   0          3m41s
+pod/store-worker-85bc87457d-6cvn4   1/1     Running   0          7m24s
+pod/store-worker-85bc87457d-tnz96   1/1     Running   0          7m25s
+
+NAME                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+service/redis         ClusterIP   10.96.62.161   <none>        6379/TCP   10m
+service/store-api     ClusterIP   10.96.106.83   <none>        80/TCP     10m
+service/store-front   ClusterIP   10.96.30.93    <none>        80/TCP     10m
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/redis          1/1     1            1           10m
+deployment.apps/store-api      5/5     5            5           10m
+deployment.apps/store-front    3/3     3            3           10m
+deployment.apps/store-worker   2/2     2            2           10m
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+
+NAME                                            REFERENCE              TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/store-api   Deployment/store-api   cpu: 2%/70%   3         10        5          10m
+
+NAME                                     MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+poddisruptionbudget.policy/store-api     2               N/A               3                     10m
+poddisruptionbudget.policy/store-front   2               N/A               1                     10m
+
+NAME                                           POD-SELECTOR       AGE
+networkpolicy.networking.k8s.io/default-deny   <none>             10m
+networkpolicy.networking.k8s.io/permite-dns    <none>             10m
+networkpolicy.networking.k8s.io/redis          app=redis          10m
+networkpolicy.networking.k8s.io/store-api      app=store-api      10m
+networkpolicy.networking.k8s.io/store-front    app=store-front    10m
+networkpolicy.networking.k8s.io/store-worker   app=store-worker   10m
+
+NAME                       REQUEST                                                         LIMIT                      AGE
+resourcequota/store-prod   pods: 11/30, requests.cpu: 600m/3, requests.memory: 480Mi/3Gi   limits.memory: 544Mi/4Gi   10m
+
+$ kubectl get all,pdb,hpa,netpol,quota -n store-dev
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/redis-64f9ccb86b-4srjx          1/1     Running   0          7m28s
+pod/store-api-5d97797fbd-kr7jp      1/1     Running   0          7m28s
+pod/store-front-79794bb77c-7l4gb    1/1     Running   0          3m59s
+pod/store-worker-7988bf6988-pxl9w   1/1     Running   0          7m28s
+
+NAME                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+service/redis         ClusterIP   10.96.48.0     <none>        6379/TCP   10m
+service/store-api     ClusterIP   10.96.130.71   <none>        80/TCP     10m
+service/store-front   ClusterIP   10.96.52.76    <none>        80/TCP     10m
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/redis          1/1     1            1           10m
+deployment.apps/store-api      1/1     1            1           10m
+deployment.apps/store-front    1/1     1            1           10m
+deployment.apps/store-worker   1/1     1            1           10m
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+

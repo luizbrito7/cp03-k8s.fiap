@@ -1,0 +1,108 @@
+# default-deny de entrada e saida; tudo abaixo e liberacao explicita
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress", "Egress"]
+---
+# DNS para todos os Pods do namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: permite-dns
+spec:
+  podSelector: {}
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# front: recebe de qualquer origem, so fala com a api
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: store-front
+spec:
+  podSelector:
+    matchLabels:
+      app: store-front
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    - ports:
+        - port: 8080
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: store-api
+      ports:
+        - port: 8000
+---
+# api: recebe do front e do Prometheus (namespace monitoring)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: store-api
+spec:
+  podSelector:
+    matchLabels:
+      app: store-api
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: store-front
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: 8000
+---
+# worker: so fala com o redis
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: store-worker
+spec:
+  podSelector:
+    matchLabels:
+      app: store-worker
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - port: 6379
+---
+# redis: so recebe do worker
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: store-worker
+      ports:
+        - port: 6379

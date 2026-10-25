@@ -1,0 +1,13 @@
+# bonus D: mesmo projeto, mas sem Namespace no clusterResourceWhitelist
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: fiap-store-sem-ns
+  namespace: argocd
+spec:
+  sourceRepos:
+    - http://gitea-http.gitea.svc.cluster.local:3000/fiap/fiap-store-config.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: store-qa
+  clusterResourceWhitelist: []

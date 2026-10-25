@@ -1,9 +1,0 @@
-#### Exercício 4.2 — Distribuição garantida com anti-affinity e topologySpreadConstraints
-
-**Tempo estimado:** 45 min · *Aplicação*
-
-- **Objetivo:** aplicar regras de distribuição e comprovar empiricamente o resultado no cluster.
-- **Enunciado:** suba um minikube com 3 nós (`minikube start --nodes=3`). Rotule os nós de trabalho simulando zonas: `kubectl label node minikube topology.kubernetes.io/zone=za`, `minikube-m02` com `zb` e `minikube-m03` com `zc`. Crie **duas versões** do Deployment `store-api` com 6 réplicas: (A) usando `podAntiAffinity` `preferredDuringSchedulingIgnoredDuringExecution` com `weight: 100` e `topologyKey: kubernetes.io/hostname`; (B) usando `topologySpreadConstraints` com `maxSkew: 1` em `topology.kubernetes.io/zone` (`DoNotSchedule`) **e** em `kubernetes.io/hostname` (`ScheduleAnyway`). Para cada versão, colete a distribuição real com `kubectl -n store-dev get pods -o wide`. Depois, escale ambas para **10 réplicas** e colete de novo. Por fim, troque na versão (A) o `preferred` por `required` e observe o que acontece. Monte uma tabela comparando as três configurações (Pods por nó em 6 e em 10 réplicas, e quantos ficaram `Pending`).
-- **Entregável:** `e42-antiaffinity.yaml`, `e42-topologyspread.yaml`, `e42-required.yaml`, a tabela comparativa em `e42-resultado.md` e a saída de `kubectl -n store-dev get pods -o wide --sort-by=.spec.nodeName` para cada cenário.
-- **Critério de aceite:** na versão (B) com 6 réplicas, a distribuição é exatamente 2/2/2 e nenhum Pod fica `Pending`; com `required` por hostname e 10 réplicas, pelo menos 7 Pods ficam `Pending` e `kubectl describe pod` de um deles exibe a mensagem `didn't match pod anti-affinity rules`.
-- <details><summary>Dica</summary>Use `kubectl get pods -o custom-columns=NOME:.metadata.name,NO:.spec.nodeName` para uma tabela limpa. O nó control-plane do minikube é agendável por padrão, então conte com ele nas 3 "zonas".</details>

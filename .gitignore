@@ -5,3 +5,5 @@ delivery/
 # chave privada do joao.qa (9.2): repo publico, fica so local
 exercises/9.2/joao-qa.key
 exercises/9.2/kubeconfig-joao.yaml
+assets/gitea-admin.env
+assets/argocd-admin.env

@@ -1,0 +1,16 @@
+# health de Application restaurado (doc oficial "Argocd App"): sem isso o root nao
+# espera a wave -1 (infra) ficar Healthy antes de criar a wave 0 (apps)
+data:
+  resource.customizations.health.argoproj.io_Application: |
+    hs = {}
+    hs.status = "Progressing"
+    hs.message = ""
+    if obj.status ~= nil then
+      if obj.status.health ~= nil then
+        hs.status = obj.status.health.status
+        if obj.status.health.message ~= nil then
+          hs.message = obj.status.health.message
+        end
+      end
+    end
+    return hs

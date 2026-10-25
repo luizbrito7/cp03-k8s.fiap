@@ -1,0 +1,50 @@
+$ kubectl get all -n store-dev
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/redis-d54bbc654-8jwh4              1/1     Running   0          9m55s
+pod/store-api-849dc5655d-8fzlx         1/1     Running   0          32s
+pod/store-front-cddfc5785-sjb95        1/1     Running   0          9m55s
+pod/store-relatorio-685cf86b68-x4k46   1/1     Running   0          9m55s
+pod/store-worker-6dcd699c76-trx6x      1/1     Running   0          9m55s
+
+NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/redis         ClusterIP   10.96.34.136    <none>        6379/TCP   9m55s
+service/store-api     ClusterIP   10.96.193.137   <none>        80/TCP     9m55s
+service/store-front   ClusterIP   10.96.81.48     <none>        80/TCP     9m55s
+
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/redis             1/1     1            1           9m55s
+deployment.apps/store-api         1/1     1            1           9m55s
+deployment.apps/store-front       1/1     1            1           9m55s
+deployment.apps/store-relatorio   1/1     1            1           9m55s
+deployment.apps/store-worker      1/1     1            1           9m55s
+
+NAME                                         DESIRED   CURRENT   READY   AGE
+
+$ kubectl get all -n store-prod
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/redis-d54bbc654-qqx5n              1/1     Running   0          9m55s
+pod/store-api-746df84ddc-4z44k         1/1     Running   0          9m55s
+pod/store-api-746df84ddc-b8sfg         1/1     Running   0          9m55s
+pod/store-api-746df84ddc-d9t2n         1/1     Running   0          9m55s
+pod/store-api-746df84ddc-vfx2f         1/1     Running   0          9m55s
+pod/store-front-cddfc5785-4dhn6        1/1     Running   0          9m55s
+pod/store-front-cddfc5785-f9zbv        1/1     Running   0          9m55s
+pod/store-front-cddfc5785-ntl9n        1/1     Running   0          9m55s
+pod/store-relatorio-685cf86b68-6jc4s   1/1     Running   0          9m55s
+pod/store-worker-6dcd699c76-49k6s      1/1     Running   0          9m55s
+pod/store-worker-6dcd699c76-jgcbv      1/1     Running   0          9m55s
+
+NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/redis         ClusterIP   10.96.145.211   <none>        6379/TCP   9m55s
+service/store-api     ClusterIP   10.96.54.53     <none>        80/TCP     9m55s
+service/store-front   ClusterIP   10.96.159.7     <none>        80/TCP     9m55s
+
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/redis             1/1     1            1           9m55s
+deployment.apps/store-api         4/4     4            4           9m55s
+deployment.apps/store-front       3/3     3            3           9m55s
+deployment.apps/store-relatorio   1/1     1            1           9m55s
+deployment.apps/store-worker      2/2     2            2           9m55s
+
+NAME                                         DESIRED   CURRENT   READY   AGE
+

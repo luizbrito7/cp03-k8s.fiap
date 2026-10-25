@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: fiap-store
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+spec:
+  description: FIAP Store, so o repo de config e so os namespaces da loja
+  sourceRepos:
+    - http://gitea-http.gitea.svc.cluster.local:3000/fiap/fiap-store-config.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: store-dev
+    - server: https://kubernetes.default.svc
+      namespace: store-prod
+    - server: https://kubernetes.default.svc
+      namespace: store-serverless
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace

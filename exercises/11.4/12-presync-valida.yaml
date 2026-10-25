@@ -1,0 +1,35 @@
+# hook PreSync: roda antes de cada sync; se falhar, o sync para aqui
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: valida-conectividade
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: valida
+          image: busybox:1.37
+          # didatico: o "store-db" da loja ainda nao existe; valida DNS e a API do cluster
+          command: ["sh", "-c", "echo validando conectividade antes do deploy; nslookup kubernetes.default.svc.cluster.local && echo ok"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]

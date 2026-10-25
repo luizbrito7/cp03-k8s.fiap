@@ -1,0 +1,6 @@
+NAME                     NAMESPACE         PROJECT     STATUS  HEALTH   SYNCPOLICY
+argocd/fiap-store-root   argocd            default     Synced  Healthy  Auto-Prune
+argocd/infra             store-dev         fiap-store  Synced  Healthy  Auto-Prune
+argocd/store-dev         store-dev         fiap-store  Synced  Healthy  Auto-Prune
+argocd/store-prod        store-prod        fiap-store  Synced  Healthy  Auto-Prune
+argocd/store-serverless  store-serverless  fiap-store  Synced  Healthy  Auto-Prune

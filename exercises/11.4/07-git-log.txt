@@ -1,0 +1,12 @@
+*   7c670ab Merge pull request 'dev: store-api 3' (#3) from bump/store-api-3 into main
+|\  
+| * 61ac5a7 chore(dev): bump store-api to 3
+|/  
+* c712517 style(dev): canonical kustomize format so ci bumps produce minimal diffs
+* 37b1a82 feat: app-of-apps with infra, front, worker, presync hook and knative
+* d34967d feat: add sealed db credentials for dev and prod
+* 6573219 feat: add store-relatorio reading db password from secret
+* 9455bbf Revert "chore(dev): bump store-api to 9.9-inexistente"
+* c59dcde chore(dev): bump store-api to 9.9-inexistente
+* 5fc62d4 chore: fail stuck rollouts after 90s
+*   a119cc2 Merge pull request 'Promove store-api 1.1 para prod' (#1) from promove-prod-1.1 into main

@@ -1,0 +1,31 @@
+.
+├── apps
+│   ├── infra.yaml
+│   ├── project.yaml
+│   ├── store-dev.yaml
+│   ├── store-prod.yaml
+│   └── store-serverless.yaml
+├── base
+│   ├── deployment.yaml
+│   ├── kustomization.yaml
+│   ├── presync-valida.yaml
+│   ├── redis.yaml
+│   ├── service.yaml
+│   ├── store-front.yaml
+│   ├── store-relatorio.yaml
+│   └── store-worker.yaml
+├── infra
+│   ├── kustomization.yaml
+│   └── namespaces.yaml
+└── overlays
+    ├── dev
+    │   ├── kustomization.yaml
+    │   └── sealed-db-credentials.yaml
+    ├── prod
+    │   ├── kustomization.yaml
+    │   ├── patch-prod.yaml
+    │   ├── pdb.yaml
+    │   └── sealed-db-credentials.yaml
+    └── serverless
+        ├── kustomization.yaml
+        └── service.yaml

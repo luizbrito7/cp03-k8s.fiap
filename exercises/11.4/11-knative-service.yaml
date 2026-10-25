@@ -1,0 +1,31 @@
+# store-api como Knative Service: escala a zero sem trafego, ate 20 sob carga
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: store-api
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/min-scale: "0"
+        autoscaling.knative.dev/max-scale: "20"
+    spec:
+      containers:
+        - image: store-api:1.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: APP_ENV
+              value: serverless
+          readinessProbe:
+            httpGet:
+              path: /ready
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault

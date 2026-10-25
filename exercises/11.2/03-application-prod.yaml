@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fiap-store-prod
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io # apagar a Application apaga o que ela criou
+spec:
+  project: fiap-store
+  source:
+    # Gitea dentro do cluster (substitui o GitHub publico do enunciado)
+    repoURL: http://gitea-http.gitea.svc.cluster.local:3000/fiap/fiap-store-config.git
+    targetRevision: main
+    path: overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: store-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
